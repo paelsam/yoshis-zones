@@ -27,38 +27,60 @@ class YoshiAI:
     
     def evaluate_board(self, blocked_cells, player_pos, ai_pos):
         score = 0
-        
-        player_controlled = 0
         ai_controlled = 0
+        player_controlled = 0
+        zone_potential = 0
+
         
         for zone in self.special_zones:
-            player_count = 0
             ai_count = 0
+            player_count = 0
+            empty_cells = 0
             
             for cell in zone:
                 if cell in blocked_cells:
-                    if blocked_cells[cell] == PLAYER_COLOR:
-                        player_count += 1
-                    elif blocked_cells[cell] == AI_COLOR:
+                    if blocked_cells[cell] == AI_COLOR:
                         ai_count += 1
+                    else:
+                        player_count += 1
+                else:
+                    empty_cells += 1
+
             
-            if ai_count > player_count:
+            if ai_count >= 3:
                 ai_controlled += 1
-            elif player_count > ai_count:
+            elif player_count >= 3:
                 player_controlled += 1
+            else:
+                
+                zone_diff = ai_count - player_count
+                if zone_diff > 0: 
+                    zone_potential += (zone_diff * 20) + (empty_cells * 5)
+                elif zone_diff < 0:
+                    zone_potential -= (abs(zone_diff) * 25)
+                
+                
+                if ai_count == 2 and empty_cells >= 1:
+                    zone_potential += 40 
+
+
+        score += (ai_controlled * 150) - (player_controlled * 200)
+        score += zone_potential 
+
+
+        ai_moves = yoshi_moves(ai_pos[0], ai_pos[1], blocked_cells)
+        special_zone_moves = [move for move in ai_moves if move in self.get_all_special_cells()]
         
-        score += (ai_controlled - player_controlled) * 100
-        
-        player_moves = len(yoshi_moves(player_pos[0], player_pos[1], blocked_cells))
-        ai_moves = len(yoshi_moves(ai_pos[0], ai_pos[1], blocked_cells))
-        score += (ai_moves - player_moves) * 10
-        
-        distance = abs(player_pos[0] - ai_pos[0]) + abs(player_pos[1] - ai_pos[1])
-        if distance < 3:
-            score -= (3 - distance) * 5
-        
+
+        score += len(special_zone_moves) * 10
+
+
+        for zone in self.special_zones:
+            if ai_pos in zone and ai_pos not in blocked_cells:
+                score += 15 
+
         return score
-    
+        
     def minimax(self, depth, is_maximizing, blocked_cells, player_pos, ai_pos, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or self.is_game_over(blocked_cells):
             return self.evaluate_board(blocked_cells, player_pos, ai_pos), None
