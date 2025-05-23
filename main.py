@@ -55,6 +55,7 @@ def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
     
     if game_over:
         result_font = pygame.font.SysFont("Arial", 36)
+        print(player_zones, ai_zones)
         if player_zones > ai_zones:
             result_text = result_font.render("¡Gana el Jugador!", True, PLAYER_COLOR)
         elif ai_zones > player_zones:
@@ -77,7 +78,6 @@ def game_loop(difficulty):
     
     ai = YoshiAI(difficulty)
     
-    selected_yoshi = None
     possible_moves = []
     turn = 'player'
     game_over = False
@@ -87,15 +87,17 @@ def game_loop(difficulty):
     running = True
     while running:
         if turn == 'ai' and not game_over:
-            pygame.time.delay(500)
-            
+            pygame.time.delay(450)
+    
             best_move = ai.get_best_move(blocked_cells, player_pos, ai_pos)
             if best_move:
                 if ai_pos in ai.get_all_special_cells() and ai_pos not in blocked_cells:
                     blocked_cells[ai_pos] = AI_COLOR
                 ai_pos = best_move
-                turn = 'player'
-            
+
+            player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
+            turn = 'player'
+
             game_over = ai.is_game_over(blocked_cells)
         
         for event in pygame.event.get():
@@ -108,23 +110,21 @@ def game_loop(difficulty):
                 row = mouse_y // CELL_HEIGHT
                 
                 if (row, col) == player_pos:
-                    selected_yoshi = (row, col)
-                    possible_moves = yoshi_moves(row, col, blocked_cells)
+                    possible_moves = yoshi_moves(row, col, blocked_cells, forbidden_positions={ai_pos})
                 
                 elif (row, col) in possible_moves:
                     if player_pos in ai.get_all_special_cells() and player_pos not in blocked_cells:
                         blocked_cells[player_pos] = PLAYER_COLOR
                     
                     player_pos = (row, col)
-                    selected_yoshi = None
                     possible_moves = []
                     turn = 'ai'
                     
                     player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
                     game_over = True if player_zones + ai_zones == 4 else False
         
-        player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
         draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos)
+        player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
         draw_game_info(screen, player_zones, ai_zones, turn, game_over)
         
         pygame.display.flip()

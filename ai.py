@@ -1,7 +1,6 @@
 import random
 from settings import ROWS, COLS, PLAYER_COLOR, AI_COLOR
 from classes.yoshi import yoshi_moves
-from collections import defaultdict
 
 class YoshiAI:
     def __init__(self, difficulty):
@@ -89,7 +88,7 @@ class YoshiAI:
         
         if is_maximizing:
             max_eval = float('-inf')
-            possible_moves = yoshi_moves(ai_pos[0], ai_pos[1], blocked_cells)
+            possible_moves = yoshi_moves(ai_pos[0], ai_pos[1], blocked_cells, forbidden_positions={player_pos})
             
             for move in possible_moves:
                 new_blocked = blocked_cells.copy()
@@ -112,7 +111,7 @@ class YoshiAI:
         
         else: 
             min_eval = float('inf')
-            possible_moves = yoshi_moves(player_pos[0], player_pos[1], blocked_cells)
+            possible_moves = yoshi_moves(player_pos[0], player_pos[1], blocked_cells, forbidden_positions={ai_pos})
             
             for move in possible_moves:
                 new_blocked = blocked_cells.copy()
