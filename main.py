@@ -1,6 +1,6 @@
 import pygame
 import random
-from settings import screen, ROWS, COLS, FPS, CELL_WIDTH, CELL_HEIGHT, PLAYER_COLOR, AI_COLOR
+from settings import screen, ROWS, COLS, FPS, CELL_WIDTH, CELL_HEIGHT, PLAYER_COLOR, AI_COLOR, BOARD_HEIGHT
 from board import draw_board, get_special_zone_cells
 from classes.yoshi import yoshi_moves
 from helpers.start_screen import show_start_screen
@@ -38,35 +38,59 @@ def calculate_controlled_zones(ai, blocked_cells):
     return player_zones, ai_zones
 
 def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
+    width = screen.get_width()
+    height = screen.get_height()
+    info_height = int(height * 0.3)
+
     font = pygame.font.SysFont("Arial", 24)
-    
-    player_text = font.render(f"Jugador (Verde): {player_zones}", True, (0, 0, 0))
-    ai_text = font.render(f"IA (Rojo): {ai_zones}", True, (0, 0, 0))
-    
-    screen.blit(player_text, (10, 10))
-    screen.blit(ai_text, (10, 40))
-    
-    turn_text = font.render(
-        f"Turno: {'Jugador' if turn == 'player' else 'IA'}", 
-        True, 
-        (0, 0, 0)
-    )
-    screen.blit(turn_text, (10, 70))
-    
+    result_font = pygame.font.SysFont("Arial", 32)
+
+    # Dibuja fondo inferior respetando el tamaño del tablero (BOARD_HEIGHT)
+    bottom_rect = pygame.Rect(0, BOARD_HEIGHT, width, info_height)
+    pygame.draw.rect(screen, (245, 245, 245), bottom_rect)
+
+    # Información a la izquierda
+    player_text = font.render(f"Jugador (Verde): {player_zones}", True, (0, 100, 0))
+    ai_text = font.render(f"IA (Rojo): {ai_zones}", True, (150, 0, 0))
+    # Texto de turno con color correspondiente
+    turn_label = font.render("Turno:", True, (0, 0, 0))
+    if turn == 'player':
+        turn_value = font.render(" Jugador", True, PLAYER_COLOR)
+    else:
+        turn_value = font.render(" IA", True, AI_COLOR)
+
+    screen.blit(player_text, (20, BOARD_HEIGHT + 20))
+    screen.blit(ai_text, (20, BOARD_HEIGHT + 60))
+    screen.blit(turn_label, (20, BOARD_HEIGHT + 100))
+    screen.blit(turn_value, (20 + turn_label.get_width(), BOARD_HEIGHT + 100))
+
+    # Resultado a la derecha
     if game_over:
-        result_font = pygame.font.SysFont("Arial", 36)
-        print(player_zones, ai_zones)
         if player_zones > ai_zones:
-            result_text = result_font.render("¡Gana el Jugador!", True, PLAYER_COLOR)
+            result = "¡Gana el Jugador!"
+            color = PLAYER_COLOR
         elif ai_zones > player_zones:
-            result_text = result_font.render("¡Gana la IA!", True, AI_COLOR)
+            result = "¡Gana la IA!"
+            color = AI_COLOR
         else:
-            result_text = result_font.render("¡Empate!", True, (0, 0, 200))
+            result = "¡Empate!"
+            color = (0, 0, 200)
+
+        result_text = result_font.render(result, True, color)
         
+        # Dibuja el resultado a la derecha respetando el tamaño del tablero (BOARD_HEIGHT)
         screen.blit(result_text, (
-            screen.get_width() // 2 - result_text.get_width() // 2,
-            screen.get_height() - 50
+            width - result_text.get_width() - 20, BOARD_HEIGHT + 20
         ))
+
+        msg_font = pygame.font.SysFont("Arial", 20)
+        msg = msg_font.render("Presiona R para reiniciar", True, (50, 50, 50))
+        
+        # Dibuja el mensaje a la derecha respetando el tamaño del tablero (BOARD_HEIGHT)
+        screen.blit(msg, (
+            width - msg.get_width() - 20, BOARD_HEIGHT + 60
+        ))
+
 
 def game_loop(difficulty):
     blocked_cells = {}
@@ -96,9 +120,8 @@ def game_loop(difficulty):
                 ai_pos = best_move
 
             player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
+            draw_game_info(screen, player_zones, ai_zones, turn, game_over)
             turn = 'player'
-
-            game_over = ai.is_game_over(blocked_cells)
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -121,18 +144,44 @@ def game_loop(difficulty):
                     turn = 'ai'
                     
                     player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
-                    game_over = True if player_zones + ai_zones == 4 else False
         
         draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos)
         player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
         draw_game_info(screen, player_zones, ai_zones, turn, game_over)
         
+        game_over = True if player_zones + ai_zones == 4 else False
+        
         pygame.display.flip()
         clock.tick(FPS)
-    
+        
+        if game_over:
+            draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos)
+            draw_game_info(screen, player_zones, ai_zones, turn, game_over)
+            pygame.display.flip()
+
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        return False
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_r:
+                            return True
+        
     pygame.quit()
 
-if __name__ == "__main__":    
-    show_start_screen()
-    selected_difficulty = show_difficulty_menu()
-    game_loop(selected_difficulty)
+if __name__ == "__main__":
+    pygame.init()
+    while True:
+        show_start_screen()
+        selected_difficulty = show_difficulty_menu()
+        
+        result = game_loop(selected_difficulty)
+
+        if result is False:
+            break  
+        elif result == 'menu':
+            continue  
+        elif result is True:
+            pass  

@@ -1,9 +1,12 @@
 import pygame
 
-WIDTH, HEIGHT = 800, 750 
+WIDTH, HEIGHT = 900, 900
+
+BOARD_HEIGHT = int(HEIGHT * 0.82) 
+
 ROWS, COLS = 8, 8
 CELL_WIDTH = WIDTH // COLS
-CELL_HEIGHT = (HEIGHT - 100) // ROWS
+CELL_HEIGHT = (BOARD_HEIGHT) // ROWS
 FPS = 60
 
 
@@ -14,5 +17,6 @@ AI_COLOR = (200, 0, 0)
 HINT_COLOR = (248, 240, 28)  
 
 pygame.init()
+pygame.display.set_icon(pygame.image.load("./imgs/icon.png"))
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Yoshi's Zones")
