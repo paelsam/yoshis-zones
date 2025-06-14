@@ -7,6 +7,7 @@ class YoshiAI:
         self.difficulty = difficulty
         self.depth = self.get_depth_from_difficulty()
         self.special_zones = self.identify_special_zones()
+        self.last_moves = [-1,-1,-1]
         
     def get_depth_from_difficulty(self):
         return {
@@ -79,7 +80,18 @@ class YoshiAI:
                 score += 15 
 
         return score
-        
+    
+    """
+    Evita ciclos infinitos, permitiendole a la IA hacer: A -> B -> A -> C, donde C != B.
+    """
+    def is_repeating_cycle(self, new_pos):
+        if self.last_moves[0] == new_pos and self.last_moves[2] == new_pos:
+            return True
+        return False
+
+    def update_last_moves(self, new_pos):
+        self.last_moves = [new_pos] + self.last_moves[:2]
+
     def minimax(self, depth, is_maximizing, blocked_cells, player_pos, ai_pos, alpha=float('-inf'), beta=float('inf')):
         if depth == 0 or self.is_game_over(blocked_cells):
             return self.evaluate_board(blocked_cells, player_pos, ai_pos), None
@@ -91,6 +103,12 @@ class YoshiAI:
             possible_moves = yoshi_moves(ai_pos[0], ai_pos[1], blocked_cells, forbidden_positions={player_pos})
             
             for move in possible_moves:
+                if self.is_repeating_cycle(move):
+                    continue  # evita ciclos innecesarios
+
+                prev_last_moves = self.last_moves.copy()
+                self.update_last_moves(move)
+
                 new_blocked = blocked_cells.copy()
                 if ai_pos in self.get_all_special_cells():
                     new_blocked[ai_pos] = AI_COLOR
@@ -98,7 +116,9 @@ class YoshiAI:
                 evaluation, _ = self.minimax(
                     depth - 1, False, new_blocked, player_pos, move, alpha, beta
                 )
-                
+
+                self.last_moves = prev_last_moves  # restaurar después de la recursión
+
                 if evaluation > max_eval:
                     max_eval = evaluation
                     best_move = move
@@ -106,10 +126,10 @@ class YoshiAI:
                 alpha = max(alpha, evaluation)
                 if beta <= alpha:
                     break
-            
+
             return max_eval, best_move
-        
-        else: 
+
+        else:
             min_eval = float('inf')
             possible_moves = yoshi_moves(player_pos[0], player_pos[1], blocked_cells, forbidden_positions={ai_pos})
             
@@ -129,7 +149,6 @@ class YoshiAI:
                 beta = min(beta, evaluation)
                 if beta <= alpha:
                     break
-            
             return min_eval, best_move
     
     def get_all_special_cells(self):
