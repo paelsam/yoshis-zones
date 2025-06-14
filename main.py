@@ -117,7 +117,6 @@ def game_loop(difficulty):
             if best_move:
                 if ai_pos in ai.get_all_special_cells() and ai_pos not in blocked_cells:
                     blocked_cells[ai_pos] = AI_COLOR
-                ai.update_last_moves(best_move)
                 ai_pos = best_move
 
 
