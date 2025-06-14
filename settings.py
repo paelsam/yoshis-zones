@@ -2,7 +2,7 @@ import pygame
 
 WIDTH, HEIGHT = 900, 900
 
-BOARD_HEIGHT = int(HEIGHT * 0.82) 
+BOARD_HEIGHT = int(HEIGHT * 0.80) 
 
 ROWS, COLS = 8, 8
 CELL_WIDTH = WIDTH // COLS

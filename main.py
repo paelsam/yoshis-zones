@@ -1,6 +1,6 @@
 import pygame
 import random
-from settings import screen, ROWS, COLS, FPS, CELL_WIDTH, CELL_HEIGHT, PLAYER_COLOR, AI_COLOR, BOARD_HEIGHT
+from settings import screen, ROWS, COLS, FPS, CELL_WIDTH, CELL_HEIGHT, PLAYER_COLOR, AI_COLOR, BOARD_HEIGHT, HEIGHT, WIDTH
 from board import draw_board, get_special_zone_cells
 from classes.yoshi import yoshi_moves
 from helpers.start_screen import show_start_screen
@@ -38,9 +38,9 @@ def calculate_controlled_zones(ai, blocked_cells):
     return player_zones, ai_zones
 
 def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
-    width = screen.get_width()
-    height = screen.get_height()
-    info_height = int(height * 0.3)
+    width = WIDTH
+    height = HEIGHT
+    info_height = HEIGHT - BOARD_HEIGHT
 
     font = pygame.font.SysFont("Arial", 24)
     result_font = pygame.font.SysFont("Arial", 32)
@@ -78,7 +78,6 @@ def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
 
         result_text = result_font.render(result, True, color)
         
-        # Dibuja el resultado a la derecha respetando el tamaño del tablero (BOARD_HEIGHT)
         screen.blit(result_text, (
             width - result_text.get_width() - 20, BOARD_HEIGHT + 20
         ))
@@ -86,7 +85,6 @@ def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
         msg_font = pygame.font.SysFont("Arial", 20)
         msg = msg_font.render("Presiona R para reiniciar", True, (50, 50, 50))
         
-        # Dibuja el mensaje a la derecha respetando el tamaño del tablero (BOARD_HEIGHT)
         screen.blit(msg, (
             width - msg.get_width() - 20, BOARD_HEIGHT + 60
         ))
@@ -114,18 +112,8 @@ def game_loop(difficulty):
     running = True
     while running:
         if turn == 'ai' and not game_over:
-            delay_time = 1500 if first_move else 450
-            pygame.time.delay(delay_time)
-            
-            # Mostrar mensaje especial para el primer movimiento
-            if first_move:
-                draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos)
-                font = pygame.font.SysFont("Arial", 32)
-                message = font.render("IA pensando su primer movimiento...", True, AI_COLOR)
-                message_rect = message.get_rect(center=(screen.get_width()//2, screen.get_height()//2))
-                screen.blit(message, message_rect)
-                pygame.display.flip()
-                pygame.time.delay(1000)  
+            delay_time = 900 if first_move else 450
+            pygame.time.delay(delay_time) 
     
             best_move = ai.get_best_move(blocked_cells, player_pos, ai_pos)
             if best_move:
