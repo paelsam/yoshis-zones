@@ -103,6 +103,7 @@ def game_loop(difficulty):
     possible_moves = []
     # Escoge un turno aleatorio para el jugador o la IA
     turn = ['player', 'ai'][random.randint(0, 1)]  
+    print(f"Turno inicial: {turn}")
     # turn = 'ai'
     game_over = False
     player_zones = 0
@@ -112,8 +113,14 @@ def game_loop(difficulty):
     running = True
     while running:
         if turn == 'ai' and not game_over:
-            delay_time = 900 if first_move else 450
+            delay_time = 450
             pygame.time.delay(delay_time) 
+            
+            if first_move:
+                draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos)
+                draw_game_info(screen, player_zones, ai_zones, turn, game_over)
+                pygame.display.flip()
+                pygame.time.delay(250)  
     
             best_move = ai.get_best_move(blocked_cells, player_pos, ai_pos)
             if best_move:
@@ -154,7 +161,7 @@ def game_loop(difficulty):
         player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
         draw_game_info(screen, player_zones, ai_zones, turn, game_over)
         
-        game_over = True if player_zones + ai_zones == 4 else False
+        game_over = True if (player_zones + ai_zones == 4) or player_zones >= 3 or ai_zones >= 3 else False
         
         pygame.display.flip()
         clock.tick(FPS)
