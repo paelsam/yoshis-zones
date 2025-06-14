@@ -1,6 +1,6 @@
 import pygame
 import random
-from settings import screen, ROWS, COLS, FPS, CELL_WIDTH, CELL_HEIGHT, PLAYER_COLOR, AI_COLOR, BOARD_HEIGHT
+from settings import screen, ROWS, COLS, FPS, CELL_WIDTH, CELL_HEIGHT, PLAYER_COLOR, AI_COLOR, BOARD_HEIGHT, HEIGHT, WIDTH
 from board import draw_board, get_special_zone_cells
 from classes.yoshi import yoshi_moves
 from helpers.start_screen import show_start_screen
@@ -38,9 +38,9 @@ def calculate_controlled_zones(ai, blocked_cells):
     return player_zones, ai_zones
 
 def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
-    width = screen.get_width()
-    height = screen.get_height()
-    info_height = int(height * 0.3)
+    width = WIDTH
+    height = HEIGHT
+    info_height = HEIGHT - BOARD_HEIGHT
 
     font = pygame.font.SysFont("Arial", 24)
     result_font = pygame.font.SysFont("Arial", 32)
@@ -78,7 +78,6 @@ def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
 
         result_text = result_font.render(result, True, color)
         
-        # Dibuja el resultado a la derecha respetando el tamaño del tablero (BOARD_HEIGHT)
         screen.blit(result_text, (
             width - result_text.get_width() - 20, BOARD_HEIGHT + 20
         ))
@@ -86,7 +85,6 @@ def draw_game_info(screen, player_zones, ai_zones, turn, game_over):
         msg_font = pygame.font.SysFont("Arial", 20)
         msg = msg_font.render("Presiona R para reiniciar", True, (50, 50, 50))
         
-        # Dibuja el mensaje a la derecha respetando el tamaño del tablero (BOARD_HEIGHT)
         screen.blit(msg, (
             width - msg.get_width() - 20, BOARD_HEIGHT + 60
         ))
@@ -103,15 +101,26 @@ def game_loop(difficulty):
     ai = YoshiAI(difficulty)
     
     possible_moves = []
-    turn = 'player'
+    # Escoge un turno aleatorio para el jugador o la IA
+    turn = ['player', 'ai'][random.randint(0, 1)]  
+    print(f"Turno inicial: {turn}")
+    # turn = 'ai'
     game_over = False
     player_zones = 0
     ai_zones = 0
+    first_move = True  
     
     running = True
     while running:
         if turn == 'ai' and not game_over:
-            pygame.time.delay(450)
+            delay_time = 450
+            pygame.time.delay(delay_time) 
+            
+            if first_move:
+                draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos)
+                draw_game_info(screen, player_zones, ai_zones, turn, game_over)
+                pygame.display.flip()
+                pygame.time.delay(250)  
     
             best_move = ai.get_best_move(blocked_cells, player_pos, ai_pos)
             if best_move:
@@ -123,6 +132,7 @@ def game_loop(difficulty):
             player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
             draw_game_info(screen, player_zones, ai_zones, turn, game_over)
             turn = 'player'
+            first_move = False  
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -150,7 +160,7 @@ def game_loop(difficulty):
         player_zones, ai_zones = calculate_controlled_zones(ai, blocked_cells)
         draw_game_info(screen, player_zones, ai_zones, turn, game_over)
         
-        game_over = True if player_zones + ai_zones == 4 else False
+        game_over = True if (player_zones + ai_zones == 4) or player_zones >= 3 or ai_zones >= 3 else False
         
         pygame.display.flip()
         clock.tick(FPS)
