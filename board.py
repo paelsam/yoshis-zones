@@ -44,13 +44,16 @@ def draw_board(screen, blocked_cells, possible_moves, player_pos, ai_pos, overri
 
                 scaled_img = pygame.transform.scale(image, (CELL_WIDTH, CELL_HEIGHT))
                 screen.blit(scaled_img, rect)
-                pygame.draw.rect(screen, (200, 0, 0), rect, 2)  # borde rojo
+                pygame.draw.rect(screen, (150, 0, 0), rect, 1)  
             else:
-                sprite_index = (row * COLS + col) % len(cell_sprites)
+                if (row + col) % 2 == 0:
+                    sprite_index = 0  
+                else:
+                    sprite_index = 1  
+                
                 image = pygame.transform.scale(cell_sprites[sprite_index], (CELL_WIDTH, CELL_HEIGHT))
                 screen.blit(image, rect)
 
-    # Dibujar celdas bloqueadas con overlay de color
     for (r, c), color in blocked_cells.items():
         rect = pygame.Rect(c * CELL_WIDTH, r * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT)
         overlay = pygame.Surface((CELL_WIDTH, CELL_HEIGHT), pygame.SRCALPHA)
