@@ -103,7 +103,6 @@ def game_loop(difficulty):
     possible_moves = []
     # Escoge un turno aleatorio para el jugador o la IA
     turn = ['player', 'ai'][random.randint(0, 1)]  
-    print(f"Turno inicial: {turn}")
     # turn = 'ai'
     game_over = False
     player_zones = 0
